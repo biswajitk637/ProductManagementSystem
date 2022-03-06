@@ -1,0 +1,185 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        Product Manegement System
+    </title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="~/js/Jquery.js"></script>
+    @*<script type="text/javascript" src="https://cdn.datatables.net/1.10.8/js/jquery.dataTables.min.js"></script>*@
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="~/js/JqueryDataTable.js"></script>
+    <link rel='stylesheet' href='//cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script type="text/javascript">
+        $(document).ready(function () {
+            PageloAdData();
+        })
+        function hideModal() {
+            $("#myModal").removeClass("in");
+            $(".modal-backdrop").remove();
+            $("#myModal").hide();
+        }
+        var PushRcd = [];
+        function PageloAdData() {
+            PushRcd = [];
+            $.ajax({
+                url: "/Crud/GetCrudDetails",
+                type: "POST",
+                dataType: 'json',
+                data: {},
+                contentType: "application/json",
+                success: function (result) {
+                    var GetDetails = result;
+                    for (var i = 0; i < GetDetails.length; i++) {
+                        PushRcd.push({ "Sno": GetDetails[i].sno, "CategotyName": GetDetails[i].categoryName, "Title": GetDetails[i].title, "Quantity": GetDetails[i].quantity, "Price": GetDetails[i].price, "Description": GetDetails[i].description })
+                    }
+                    $.each(PushRcd, function (index, value) {
+                        var tr = "<tr>";
+                        tr += "<td>" + value.Sno + "</td>";
+                        tr += "<td>" + value.CategotyName + "</td>";
+                        tr += "<td>" + value.Title + "</td>";
+                        tr += "<td>" + value.Quantity + "</td>";
+                        tr += "<td>" + value.Price + "</td>";
+                        tr += "<td>" + value.Description + "</td>";
+                        tr += "<td>" + "<button type='button' id='" + value.Sno + "' onclick='EditButton(" + value.Sno + ")'class='btn btn-info' > Edit <i class='fa fa-edit'></i></button>&nbsp;" + "<button type='button' id='" + value.Sno + '_edit' + "' onclick='DeleteButton(" + value.Sno + ")' class='btn btn-danger btn-sm'>Delete <i class='fa fa-trash'></i></button>" + "</td>" + "</tr>";
+                        $("#tBody").append(tr);
+                    });
+                    $.noConflict();
+                    $("#table3").DataTable();
+                }
+            });
+        }
+        var Status = null;
+        function AddItem() {
+            Status = "Add";
+            $("#myModal").modal("show");
+           
+        }
+        function AddProductDetails() {
+            let user1 = {
+                CategoryName: $("#CatName").val(), Title: $("#CatTitle").val(), Quantity: $("#quatity").val(), Price: $("#price").val(),Description: $("#description").val()
+            }
+            var msg = null;
+            var Path = null;
+            if (Status == "Add") {
+                msg = "Are You Sure to Add Product";
+                Path = "AddProduct";
+            }
+            if (Status == "Edit") {
+                msg = "Are You Sure to Update Product";
+                Path = "UpdateProduct";
+            }
+            var con = confirm(msg);
+            if (con == true) {
+                $.ajax({
+                    url: "/Crud/" + Path,
+                    type: "POST",
+                    dataType: 'json',
+                    data: { user: user1 },
+                    //contentType: "application/json",
+                    success: function (result) {
+                        alert(result);
+                        hideModal();
+                        PageloAdData();
+                    }
+                });
+            }
+        }
+        function EditButton(Id) {
+            Status ="Edit"
+            $("#myModal").modal("show");
+            var Ind = PushRcd.findIndex(x => x.Sno == Id);
+            $("#CatName").val(PushRcd[Ind].CategotyName);
+            $("#CatTitle").val(PushRcd[Ind].Title);
+            $("#quatity").val(PushRcd[Ind].Quantity);
+            $("#price").val(PushRcd[Ind].Price);
+            $("#description").val(PushRcd[Ind].Description);
+        }
+        function DeleteButton(Id) {
+            var con = confirm("Are You Sure to Delete");
+            if (con == true) {
+                $.ajax({
+                    url: "/Crud/RemoveProduct",
+                    type: "POST",
+                    dataType: 'json',
+                    data: { id: Id },
+                    //contentType: "application/json",
+                    success: function (result) {
+                        alert(result);
+                        PageloAdData();
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="myModal" class="modal fade" role="dialog" style="display:none">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Product Details</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <input type="text" id="CatName" class="form-control" placeholder="Category Name" />
+                        </div>
+                        <div class="col-md-12">
+                            <input type="text" id="CatTitle" class="form-control" placeholder="Title" />
+                        </div>
+                        <div class="col-md-12">
+                            <input type="text"id="quatity" class="form-control" placeholder="Quantity" />
+                        </div>
+                        <div class="col-md-12">
+                            <input type="text"id="price"  class="form-control" placeholder="Price" />
+                        </div>
+                        <div class="col-md-12">
+                            <input type="text" id="description" class="form-control" placeholder="Description" />
+                        </div>
+                    </div>
+                   
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger pull-left" data-dismiss="modal">Close</button>&nbsp;
+                    <button type="button" class="btn btn-info" onclick="AddProductDetails()">Submit <i class="fa fa-send"></i></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <button type="button" onclick="AddItem();" style="margin-top:10px;margin-bottom:10px;" class="btn btn-success">Add Product <i class="fa fa-plus"></i></button>
+        </div>
+        <div class="col-md-6">
+            <a class="btn btn-default btn-md" href="@Url.Action("Login","Account")">Sign Out</a>
+        </div>
+    </div>
+   
+    <table class="table table-bordered" id="table3">
+        <thead>
+            <tr class="bg-primary">
+                <th>Sno</th>
+                <th>CategoryName</th>
+                <th>Title</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="tBody">
+        </tbody>
+    </table>
+</body>
+</html>
